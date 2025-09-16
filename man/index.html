@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gemini Image Generator</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        font-size: 2.5em;
+        margin-bottom: 30px;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .input-group {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+      }
+
+      #prompt {
+        flex: 1;
+        min-width: 300px;
+        padding: 15px 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: white;
+      }
+
+      #prompt:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      #generate {
+        padding: 15px 30px;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 120px;
+      }
+
+      #generate:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+      }
+
+      #generate:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+        color: #667eea;
+        font-weight: 500;
+      }
+
+      .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 10px auto;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      #result {
+        text-align: center;
+        padding: 20px;
+      }
+
+      #result img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        margin: 20px 0;
+        animation: fadeIn 0.8s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+      }
+
+      .text-result {
+        background: #f8f9ff;
+        border: 1px solid #e0e7ff;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: left;
+        color: #4a5568;
+        line-height: 1.6;
+      }
+
+      .error {
+        background: #fee;
+        border: 1px solid #fcc;
+        color: #c53030;
+      }
+
+      .examples {
+        margin-top: 30px;
+        text-align: left;
+      }
+
+      .examples h3 {
+        color: #333;
+        margin-bottom: 15px;
+      }
+
+      .example-prompts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 10px;
+      }
+
+      .example-prompt {
+        background: #f8f9ff;
+        border: 1px solid #e0e7ff;
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+      }
+
+      .example-prompt:hover {
+        background: #e0e7ff;
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 20px;
+        }
+
+        h1 {
+          font-size: 2em;
+        }
+
+        .input-group {
+          flex-direction: column;
+        }
+
+        #prompt {
+          min-width: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>✨ Gemini Image Generator</h1>
+
+      <div class="input-group">
+        <input
+          type="text"
+          id="prompt"
+          placeholder="Describe the image you want to generate..."
+        />
+        <button id="generate">Generate</button>
+      </div>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Generating your image with Gemini AI...</p>
+      </div>
+
+      <div id="result"></div>
+
+      <div class="examples">
+        <h3>💡 Try these example prompts:</h3>
+        <div class="example-prompts">
+          <div class="example-prompt" onclick="setPrompt(this)">
+            A majestic dragon flying over a mystical forest at sunset
+          </div>
+          <div class="example-prompt" onclick="setPrompt(this)">
+            A cozy cabin in the mountains during a snowy winter evening
+          </div>
+          <div class="example-prompt" onclick="setPrompt(this)">
+            A futuristic cityscape with flying cars and neon lights
+          </div>
+          <div class="example-prompt" onclick="setPrompt(this)">
+            An underwater scene with colorful coral reefs and tropical fish
+          </div>
+          <div class="example-prompt" onclick="setPrompt(this)">
+            A peaceful zen garden with cherry blossoms and a stone bridge
+          </div>
+          <div class="example-prompt" onclick="setPrompt(this)">
+            A steampunk airship floating among clouds in a golden sky
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+          const promptInput = document.getElementById("prompt");
+          const generateBtn = document.getElementById("generate");
+          const loadingDiv = document.getElementById("loading");
+          const resultDiv = document.getElementById("result");
+
+          function setPrompt(element) {
+            promptInput.value = element.textContent.trim();
+            promptInput.focus();
+          }
+
+          async function generateImage() {
+            const prompt = promptInput.value.trim();
+
+            if (!prompt) {
+              showResult("Please enter a prompt first!", "error");
+              return;
+            }
+
+            // Show loading state
+            generateBtn.disabled = true;
+            generateBtn.textContent = "Generating...";
+            loadingDiv.style.display = "block";
+            resultDiv.innerHTML = "";
+
+            try {
+              const response = await fetch("http://localhost:3000/api/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt }),
+              });
+
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+
+              const data = await response.json();
+
+              if (data.image) {
+                const img = document.createElement("img");
+                img.src = "data:image/png;base64," + data.image;
+                img.alt = "Generated image: " + prompt;
+                resultDiv.innerHTML = "";
+                resultDiv.appendChild(img);
+
+
+                const downloadLink = document.createElement("a");
+      downloadLink.href = img.src;
+      downloadLink.download = "generated-image.png"; // default filename
+      downloadLink.textContent = "⬇️ Download Image";
+      downloadLink.style.display = "inline-block";
+      downloadLink.style.marginTop = "15px";
+      downloadLink.style.padding = "10px 20px";
+      downloadLink.style.background = "linear-gradient(45deg, #667eea, #764ba2)";
+      downloadLink.style.color = "white";
+      downloadLink.style.borderRadius = "8px";
+      downloadLink.style.textDecoration = "none";
+      downloadLink.style.fontWeight = "600";
+
+        resultDiv.appendChild(downloadLink);
+              } else if (data.text) {
+                showResult(data.text, "text");
+              } else {
+                showResult("No image or text returned from the API.", "error");
+              }
+
+            } catch (error) {
+              console.error("Error:", error);
+              showResult(`Error: ${error.message}. Make sure your server is running on http://localhost:3000`, "error");
+            } finally {
+              // Reset loading state
+              generateBtn.disabled = false;
+              generateBtn.textContent = "Generate";
+              loadingDiv.style.display = "none";
+            }
+          }
+
+          function showResult(text, type = "text") {
+            const div = document.createElement("div");
+            div.className = `text-result ${type === "error" ? "error" : ""}`;
+            div.textContent = text;
+            resultDiv.innerHTML = "";
+            resultDiv.appendChild(div);
+          }
+
+          // Event listeners
+          generateBtn.addEventListener("click", generateImage);
+
+          promptInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+              generateImage();
+            }
+          });
+
+          // Auto-focus on the input when page loads
+          window.addEventListener("load", () => {
+            promptInput.focus();
+          });
+    </script>
+  </body>
+</html>

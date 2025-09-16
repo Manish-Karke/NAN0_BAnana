@@ -1,0 +1,26 @@
+# Node.js dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Optional cache
+.cache/
+.tmp/
+
+# Output images
+images/
+
+# Build output (if later you use build tools)
+dist/
+build/
