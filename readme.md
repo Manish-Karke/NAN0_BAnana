@@ -36,8 +36,7 @@ Copy code
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/your-username/gemini-image-generator.git
-cd gemini-image-generator/man
+git clone https://github.com/Manish-Karke/NAN0_BAnana.git
 2. Install dependencies
 bash
 Copy code
